@@ -2,7 +2,6 @@ import streamlit as st
 import os
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import plotly.express as px
 
 st.title("Ile-de-France Mobilités : Analyse de données de validation de titres de transport.")
