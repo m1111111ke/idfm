@@ -32,6 +32,10 @@ jobs:
         run: |
           make setup
 
+        name: Install MkDocs
+        run: |
+          pip install mkdocs  
+
       - name: Deploy MkDocs documentation
         run: |
           make deploy_docs
