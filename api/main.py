@@ -1,3 +1,4 @@
+#Imports
 import logging
 import os
 from pathlib import Path
@@ -13,6 +14,14 @@ app = FastAPI(
     title="API Données de Validations de Titre de Transports",
     description="Une API sécurisée par clé pour servir les données de validations de titre de transport en Ile-de-France et de stations/gares."
 )
+
+@app.get("/")
+async def root():
+    return {"message": "Bienvenue sur l'API des données de validation de titre de transport en Ile-de-France !"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "Data API"}
 
 
 # Sécurité : Configuration de la clé API.
@@ -45,7 +54,7 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR.parent / "data" / "processed"
 
 stations_data = []
-validations_data = []
+#validations_data = []
 validations_ligne_data = []
 
 @app.on_event("startup")
@@ -54,7 +63,7 @@ def load_and_cache_data():
     logger.info("Chargement et traitement des fichiers CSV en cours...")
     try:
         stations_data = pd.read_csv(DATA_DIR / "stations.csv").to_dict(orient="records")
-        validations_data = pd.read_csv(DATA_DIR / "validations.csv").to_dict(orient="records")
+        #validations_data = pd.read_csv(DATA_DIR / "validations.csv").to_dict(orient="records")
         validations_ligne_data = pd.read_csv(DATA_DIR / "validations_ligne.csv").to_dict(orient="records")
         logger.info("Données chargées et converties avec succès !")
     except FileNotFoundError as e:
@@ -63,18 +72,47 @@ def load_and_cache_data():
 
 
 
-# Endpoints sécurisés avec Depends.
+# Endpoints sécurisés en ajoutant `dependencies=[Security(verify_api_key)]`, l'accès est bloqué sans clé valide.
 
-# En ajoutant `dependencies=[Security(verify_api_key)]`, l'accès est bloqué sans clé valide.
-
-@app.get("/api/stations", dependencies=[Security(verify_api_key)])
+@app.get(
+        "/api/stations", 
+        dependencies=[Security(verify_api_key)],
+        summary="Liste des stations.",
+        description="Informations sur les stations."
+)
 async def get_stations():
     return stations_data
 
-@app.get("/api/validations", dependencies=[Security(verify_api_key)])
+"""
+@app.get(
+        "/api/validations",
+          dependencies=[Security(verify_api_key)],
+)
 async def get_validations():
     return validations_data
+"""
 
-@app.get("/api/validations/ligne", dependencies=[Security(verify_api_key)])
+
+# Endpoint pour récupérer les données de toutes les lignes.
+@app.get(
+        "/api/validations/ligne", 
+        dependencies=[Security(verify_api_key)],
+        summary="Validations pour toutes les lignes",
+        description="Récupérer les validations pour toutes les lignes de transport."
+)
 async def get_validations_ligne():
     return validations_ligne_data
+
+
+# Endpoint pour récupérer les données d'une ligne spécifique.
+@app.get(
+        "/api/validations/ligne/{Ligne}", 
+        dependencies=[Security(verify_api_key)],
+        summary="Validations pour une ligne spécifique.",
+        description="Récupérer les validations pour une ligne donnée."
+)
+async def get_validations_une_ligne(Ligne: str):
+    for ligne in validations_ligne_data:
+        if ligne.get("Ligne") == Ligne:
+            return ligne
+    raise HTTPException(status_code=404, detail="Ligne introuvable")
