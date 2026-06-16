@@ -1,10 +1,12 @@
 #Imports
-import logging
+import logging # Permet d'afficher des messages dans la console (logs) pour suivre l'état de l'application (erreurs, succès de chargement).
 import os
 from pathlib import Path
 from fastapi import FastAPI, Security, HTTPException, status
-from fastapi.security import APIKeyHeader
+from fastapi.security import APIKeyHeader # Permet de définir un mécanisme de sécurité basé sur une clé secrète passée dans l'en-tête (Header) de la requête HTTP.
 import pandas as pd
+from pydantic import BaseModel
+
 
 # Configuration des logs
 logging.basicConfig(level=logging.INFO)
@@ -29,7 +31,7 @@ async def health_check():
 # Nom de l'en-tête HTTP que le client devra envoyer.
 API_KEY_NAME = "X-API-Key"
 
-# Stocker cette clé dans les variables d'environnement.
+# Stocker la clé dans les variables d'environnement.
 # Si la variable n'est pas définie, on utilise une clé par défaut.
 API_KEY = os.getenv("MY_API_KEY", "ma_cle_secrete_123")
 
@@ -54,22 +56,34 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR.parent / "data" / "processed"
 
 stations_data = []
-#validations_data = []
 validations_ligne_data = []
 
 @app.on_event("startup")
 def load_and_cache_data():
-    global stations_data, validations_data, validations_ligne_data
+    global stations_data, validations_ligne_data # Permet de modifier les variables définies à l'extérieur de la fonction.
     logger.info("Chargement et traitement des fichiers CSV en cours...")
     try:
-        stations_data = pd.read_csv(DATA_DIR / "stations.csv").to_dict(orient="records")
-        #validations_data = pd.read_csv(DATA_DIR / "validations.csv").to_dict(orient="records")
+        # Définir les colonnes à conserver pour les stations.
+        colonnes_stations = ['id_ref_zdc', 'nom_zdc', 'res_com']
+        stations_data = pd.read_csv(DATA_DIR / "stations.csv", usecols=colonnes_stations).to_dict(orient="records")
+        
         validations_ligne_data = pd.read_csv(DATA_DIR / "validations_ligne.csv").to_dict(orient="records")
+
         logger.info("Données chargées et converties avec succès !")
     except FileNotFoundError as e:
         logger.error(f"Impossible de trouver les fichiers de données : {e}")
         raise e
 
+
+# Modèle Pydantic pour stations.
+class Stations(BaseModel):
+    id_ref_zdc: int
+    nom_zdc: str
+    res_com: str
+    #nb_lignes : int
+    #mode: str
+    #latitude : float
+    #longitude : float
 
 
 # Endpoints sécurisés en ajoutant `dependencies=[Security(verify_api_key)]`, l'accès est bloqué sans clé valide.
@@ -77,11 +91,13 @@ def load_and_cache_data():
 @app.get(
         "/api/stations", 
         dependencies=[Security(verify_api_key)],
+        response_model= Stations,
         summary="Liste des stations.",
         description="Informations sur les stations."
 )
 async def get_stations():
     return stations_data
+
 
 """
 @app.get(
@@ -94,6 +110,7 @@ async def get_validations():
 
 
 # Endpoint pour récupérer les données de toutes les lignes.
+
 @app.get(
         "/api/validations/ligne", 
         dependencies=[Security(verify_api_key)],
@@ -105,11 +122,12 @@ async def get_validations_ligne():
 
 
 # Endpoint pour récupérer les données d'une ligne spécifique.
+
 @app.get(
         "/api/validations/ligne/{Ligne}", 
         dependencies=[Security(verify_api_key)],
         summary="Validations pour une ligne spécifique.",
-        description="Récupérer les validations pour une ligne donnée."
+        description="Récupérer les validations pour une ligne donnée (ex: RER A, METRO 1)."
 )
 async def get_validations_une_ligne(Ligne: str):
     for ligne in validations_ligne_data:
