@@ -5,7 +5,6 @@ from pathlib import Path
 from fastapi import FastAPI, Security, HTTPException, status
 from fastapi.security import APIKeyHeader # Permet de définir un mécanisme de sécurité basé sur une clé secrète passée dans l'en-tête (Header) de la requête HTTP.
 import pandas as pd
-from pydantic import BaseModel
 
 
 # Configuration des logs
@@ -56,17 +55,25 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR.parent / "data" / "processed"
 
 stations_data = []
+validations_fusion_data = []
 validations_ligne_data = []
 
 @app.on_event("startup")
 def load_and_cache_data():
-    global stations_data, validations_ligne_data # Permet de modifier les variables définies à l'extérieur de la fonction.
+    global stations_data, validations_fusion_data, validations_ligne_data # Permet de modifier les variables définies à l'extérieur de la fonction.
     logger.info("Chargement et traitement des fichiers CSV en cours...")
     try:
+        # stations.
         # Définir les colonnes à conserver pour les stations.
-        colonnes_stations = ['id_ref_zdc', 'nom_zdc', 'res_com']
+        colonnes_stations = ['id_ref_zdc', 'nom_zdc', 'res_com', 'mode', 'nb_lignes', 'latitude', 'longitude']
         stations_data = pd.read_csv(DATA_DIR / "stations.csv", usecols=colonnes_stations).to_dict(orient="records")
+
+        # validations_fusion.
+        # Définir les colonnes à conserver pour validations_fusion.
+        colonnes_validations_fusion = ["jour", "id_zdc", "nom_zdc", "categorie_titre", "nb_vald"]
+        validations_fusion_data = pd.read_csv(DATA_DIR / "validations_fusion.csv", usecols=colonnes_validations_fusion).to_dict(orient="records")
         
+        # validations_ligne.
         validations_ligne_data = pd.read_csv(DATA_DIR / "validations_ligne.csv").to_dict(orient="records")
 
         logger.info("Données chargées et converties avec succès !")
@@ -75,23 +82,12 @@ def load_and_cache_data():
         raise e
 
 
-# Modèle Pydantic pour stations.
-class Stations(BaseModel):
-    id_ref_zdc: int
-    nom_zdc: str
-    res_com: str
-    #nb_lignes : int
-    #mode: str
-    #latitude : float
-    #longitude : float
-
 
 # Endpoints sécurisés en ajoutant `dependencies=[Security(verify_api_key)]`, l'accès est bloqué sans clé valide.
 
 @app.get(
         "/api/stations", 
         dependencies=[Security(verify_api_key)],
-        response_model= Stations,
         summary="Liste des stations.",
         description="Informations sur les stations."
 )
@@ -99,14 +95,13 @@ async def get_stations():
     return stations_data
 
 
-"""
 @app.get(
-        "/api/validations",
+        "/api/validations_fusion",
           dependencies=[Security(verify_api_key)],
 )
 async def get_validations():
-    return validations_data
-"""
+    return validations_fusion_data
+
 
 
 # Endpoint pour récupérer les données de toutes les lignes.
