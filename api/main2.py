@@ -8,7 +8,7 @@ import os
 
 app = FastAPI(
         title="API Données de Validations de Titre de Transports",
-        description="Une API sécurisée par clé pour servir les données de validations de titre de transport en Ile-de-France et de stations/gares."    
+        description="Une API sécurisée par clé pour servir les données de validations de titre de transport en Ile-de-France et de stations/gares."
 )
 
 @app.get("/")
