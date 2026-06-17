@@ -1,19 +1,66 @@
-#Imports
-import logging # Permet d'afficher des messages dans la console (logs) pour suivre l'état de l'application (erreurs, succès de chargement).
+# Imports
+import logging
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, Security, HTTPException, status
-from fastapi.security import APIKeyHeader # Permet de définir un mécanisme de sécurité basé sur une clé secrète passée dans l'en-tête (Header) de la requête HTTP.
+from fastapi.security import APIKeyHeader
 import pandas as pd
+from pydantic import BaseModel
 
-
-# Configuration des logs
+# Configuration des logs.
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Gestion des chemins.
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR.parent / "data" / "processed"
+
+# Stockage global des données (sous forme de dictionnaires pour un accès rapide)
+stations_list = []
+validations_station_dict = {}
+validations_ligne_dict = {}
+
+# Gestion du cycle de vie (Lifespan).
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global stations_list, validations_station_dict, validations_ligne_dict
+    logger.info("Chargement et traitement des fichiers CSV en cours...")
+    
+    try:
+        # 1. Stations.
+        colonnes_stations = ['id_ref_zdc', 'nom_zdc', 'res_com', 'mode', 'nb_lignes', 'latitude', 'longitude']
+        stations_list = pd.read_csv(DATA_DIR / "stations.csv", usecols=colonnes_stations).to_dict(orient="records")
+
+        # 2. Validations par station.
+        colonnes_validations_station = ["id_zdc", "nom_zdc", "nb_vald"]
+        df_val_station = (
+            pd.read_csv(DATA_DIR / "validations_fusion.csv", usecols=colonnes_validations_station)
+            .groupby(["id_zdc", "nom_zdc"])["nb_vald"] 
+            .sum()
+            .reset_index()
+        )
+        # Indexation par id_zdc converti en string pour faciliter la recherche directe.
+        validations_station_dict = df_val_station.set_index("id_zdc").to_dict(orient="index")
+        
+        # 3. Validations par ligne
+        df_ligne = pd.read_csv(DATA_DIR / "validations_ligne.csv")
+        # Stockage en minuscules pour une recherche insensible à la casse.
+        validations_ligne_dict = {str(k).lower(): v for k, v in df_ligne.set_index("Ligne").to_dict(orient="index").items()}
+
+        logger.info("Données chargées et converties avec succès !")
+    except FileNotFoundError as e:
+        logger.error(f"Impossible de trouver les fichiers de données : {e}")
+        raise e
+        
+    yield
+    logger.info("Fermeture de l'application.")
+
+# Initialisation de FastAPI avec le lifespan.
 app = FastAPI(
     title="API Données de Validations de Titre de Transports",
-    description="Une API sécurisée par clé pour servir les données de validations de titre de transport en Ile-de-France et de stations/gares."
+    description="Une API sécurisée par clé pour servir les données de validations de titre de transport en Ile-de-France et de stations/gares.",
+    lifespan=lifespan
 )
 
 @app.get("/")
@@ -25,21 +72,12 @@ async def health_check():
     return {"status": "healthy", "service": "Data API"}
 
 
-# Sécurité : Configuration de la clé API.
-
-# Nom de l'en-tête HTTP que le client devra envoyer.
+#   SECURITE.
 API_KEY_NAME = "X-API-Key"
-
-# Stocker la clé dans les variables d'environnement.
-# Si la variable n'est pas définie, on utilise une clé par défaut.
 API_KEY = os.getenv("MY_API_KEY", "ma_cle_secrete_123")
-
-# Définir un schéma de sécurité pour FastAPI.
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=True)
 
 def verify_api_key(api_key: str = Security(api_key_header)):
-    
-    #Dépendance pour vérifier la validité de la clé API fournie.    
     if api_key != API_KEY:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -47,85 +85,148 @@ def verify_api_key(api_key: str = Security(api_key_header)):
         )
     return api_key
 
+# Modèle Pydantic pour station.
+class StationCreate(BaseModel):
+    id_ref_zdc: str
+    nom_zdc: str
+    res_com: str
+    mode: str
+    nb_lignes: int
+    latitude: float
+    longitude: float
+
+# Modèle Pydantic pour ligne.
+class LigneCreate(BaseModel):
+    Ligne: str       # Exemple: "METRO 17" 
+    nb_vald: int     # Exemple: 1250000
 
 
-# Chargement des données.
+# ENDPOINTS.
 
-BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR.parent / "data" / "processed"
-
-stations_data = []
-validations_fusion_data = []
-validations_ligne_data = []
-
-@app.on_event("startup")
-def load_and_cache_data():
-    global stations_data, validations_fusion_data, validations_ligne_data # Permet de modifier les variables définies à l'extérieur de la fonction.
-    logger.info("Chargement et traitement des fichiers CSV en cours...")
-    try:
-        # stations.
-        # Définir les colonnes à conserver pour les stations.
-        colonnes_stations = ['id_ref_zdc', 'nom_zdc', 'res_com', 'mode', 'nb_lignes', 'latitude', 'longitude']
-        stations_data = pd.read_csv(DATA_DIR / "stations.csv", usecols=colonnes_stations).to_dict(orient="records")
-
-        # validations_fusion.
-        # Définir les colonnes à conserver pour validations_fusion.
-        colonnes_validations_fusion = ["jour", "id_zdc", "nom_zdc", "categorie_titre", "nb_vald"]
-        validations_fusion_data = pd.read_csv(DATA_DIR / "validations_fusion.csv", usecols=colonnes_validations_fusion).to_dict(orient="records")
-        
-        # validations_ligne.
-        validations_ligne_data = pd.read_csv(DATA_DIR / "validations_ligne.csv").to_dict(orient="records")
-
-        logger.info("Données chargées et converties avec succès !")
-    except FileNotFoundError as e:
-        logger.error(f"Impossible de trouver les fichiers de données : {e}")
-        raise e
-
-
-
-# Endpoints sécurisés en ajoutant `dependencies=[Security(verify_api_key)]`, l'accès est bloqué sans clé valide.
-
+# Endpoint GET liste des stations.
 @app.get(
-        "/api/stations", 
-        dependencies=[Security(verify_api_key)],
-        summary="Liste des stations.",
-        description="Informations sur les stations."
+    "/api/stations", 
+    dependencies=[Security(verify_api_key)],
+    summary="Liste des stations.",
+    description="Informations sur les stations."
 )
 async def get_stations():
-    return stations_data
+    return stations_list
+
+# Endpoint POST nouvelle station.
+@app.post(
+    "/api/stations", 
+    dependencies=[Security(verify_api_key)],
+    status_code=status.HTTP_201_CREATED,
+    summary="Créer une nouvelle station.",
+    description="Ajoute une nouvelle station à la liste en mémoire."
+)
+async def create_station(station: StationCreate):
+    global stations_list
+    
+    # Vérifier si l'ID de la station existe déjà pour éviter les doublons.
+    for s in stations_list:
+        if s.get("id_ref_zdc") == station.id_ref_zdc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Une station avec l'ID {station.id_ref_zdc} existe déjà."
+            )
+            
+    # Convertir le modèle Pydantic en dictionnaire Python.
+    nouvelle_station = station.model_dump() # Utilise station.dict() si tu as une vieille version de Pydantic.
+    
+    # Ajouter la station à la liste globale.
+    stations_list.append(nouvelle_station)
+    
+    logger.info(f"Nouvelle station créée : {nouvelle_station['nom_zdc']} (ID: {nouvelle_station['id_ref_zdc']})")
+    
+    # Retourner la station créée au client.
+    return nouvelle_station
 
 
+# Endpoint GET pour validations par station.
 @app.get(
-        "/api/validations_fusion",
-          dependencies=[Security(verify_api_key)],
+    "/api/validations_station",
+    dependencies=[Security(verify_api_key)],
+    summary="Validations de titre pour toutes les stations",
+    description="Récupérer les données de validation de titre pour toutes les stations."
 )
 async def get_validations():
-    return validations_fusion_data
+    # convertit le dictionnaire interne en liste pour l'output de l'API. List comprehension parcourt le dictionnaire, récupère la clé k et la valeur v.
+    return [{"id_zdc": k, **v} for k, v in validations_station_dict.items()]
 
-
-
-# Endpoint pour récupérer les données de toutes les lignes.
-
+# Endpoint GET pour validation pour une station spécifique.
 @app.get(
-        "/api/validations/ligne", 
-        dependencies=[Security(verify_api_key)],
-        summary="Validations pour toutes les lignes",
-        description="Récupérer les validations pour toutes les lignes de transport."
+    "/api/validations_station/{id_zdc}", 
+    dependencies=[Security(verify_api_key)],
+    summary="Validations de titre pour une station spécifique.",
+    description="Récupérer les données de validation de titre pour une station donnée via son id (ex: Châtelet-les-Halles : 474151)."
+)
+async def get_validations_une_station(id_zdc: str):
+    # Recherche ultra rapide en O(1) avec sécurité en convertissant la clé en entier.
+    station = validations_station_dict.get(id_zdc) or validations_station_dict.get(int(id_zdc) if id_zdc.isdigit() else None)
+    
+    if station:
+        return {"id_zdc": id_zdc, **station}
+    raise HTTPException(status_code=404, detail="Station introuvable")
+
+
+# Endpoint GET validations par ligne.
+@app.get(
+    "/api/validations/ligne", 
+    dependencies=[Security(verify_api_key)],
+    summary="Validations de titre pour toutes les lignes",
+    description="Récupérer les données de validation de titre pour toutes les lignes de transport."
 )
 async def get_validations_ligne():
-    return validations_ligne_data
+    # Convertit le dictionnaire interne des lignes en liste pour afficher au format JSON.
+    return [{"Ligne": k, **v} for k, v in validations_ligne_dict.items()]
 
 
-# Endpoint pour récupérer les données d'une ligne spécifique.
-
+# Endpoint GET validation pour une ligne spécifique.
 @app.get(
-        "/api/validations/ligne/{Ligne}", 
-        dependencies=[Security(verify_api_key)],
-        summary="Validations pour une ligne spécifique.",
-        description="Récupérer les validations pour une ligne donnée (ex: RER A, METRO 1)."
+    "/api/validations/ligne/{Ligne}", 
+    dependencies=[Security(verify_api_key)],
+    summary="Validations de titre pour une ligne spécifique.",
+    description="Récupérer les données de validation de titre pour une ligne donnée (ex: RER A, METRO 1)."
 )
 async def get_validations_une_ligne(Ligne: str):
-    for ligne in validations_ligne_data:
-        if ligne.get("Ligne") == Ligne:
-            return ligne
+    # Recherche en O(1) insensible à la casse
+    ligne_data = validations_ligne_dict.get(Ligne.lower())
+    if ligne_data:
+        return {"Ligne": Ligne, **ligne_data}
     raise HTTPException(status_code=404, detail="Ligne introuvable")
+
+# Endpoint POST pour créer une nouvelle ligne.
+@app.post(
+    "/api/validations/ligne", 
+    dependencies=[Security(verify_api_key)],
+    status_code=status.HTTP_201_CREATED,
+    summary="Créer une nouvelle ligne de transport.",
+    description="Ajoute une nouvelle ligne avec ses données de validation dans le dictionnaire en mémoire."
+)
+async def create_ligne(ligne: LigneCreate):
+    global validations_ligne_dict
+    
+    # Normaliser le nom de la ligne en minuscules pour la clé du dictionnaire.
+    cle_ligne = ligne.Ligne.lower()
+    
+    # Vérifier si la ligne existe déjà (insensible à la casse).
+    if cle_ligne in validations_ligne_dict:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"La ligne '{ligne.Ligne}' existe déjà."
+        )
+        
+    # Convertir le modèle Pydantic en dictionnaire.
+    donnees_ligne = ligne.model_dump()
+    
+    # Extraire le nom de la ligne pour s'en servir de clé, 
+    # et stocker le reste des données dans le dictionnaire global.
+    nom_original = donnees_ligne.pop("Ligne")
+    validations_ligne_dict[cle_ligne] = donnees_ligne
+    
+    logger.info(f"Nouvelle ligne créée avec succès : {nom_original}")
+    
+    # Retourner un aperçu de ce qui a été enregistré.
+    return {"Ligne": nom_original, **donnees_ligne}
