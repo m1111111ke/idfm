@@ -3,6 +3,10 @@ import os
 import pandas as pd
 import plotly.express as px
 
+st.image(
+    "https://upload.wikimedia.org/wikipedia/fr/c/ce/IdFMobilit%C3%A9s.svg", width=300
+)
+
 st.title(
     "Ile-de-France Mobilités : Analyse de données de validation de titres de transport."
 )
@@ -17,7 +21,9 @@ st.write(
 
 # Validations par station.
 
-st.header("Top 5 Validations par station.")
+st.header("Validations par station.")
+
+st.write("Top 5 validations par station.")
 
 filepath = os.path.join("..", "data", "processed", "validations_fusion.csv")
 df = pd.read_csv(filepath)
@@ -50,6 +56,30 @@ fig.update_traces(marker_color="#ABD8FD")
 
 fig.update_xaxes(title_text=None)
 fig.update_yaxes(title_text="Validations")
+
+fig
+
+# Maps : carte des stations avec validations.
+
+st.write("Carte des Stations.")
+
+degrade_couleur = ["#4EA8DE", "#0077B6", "#03045E"]
+
+fig = px.scatter_mapbox(
+    df[["nom_zdc", "nb_vald", "latitude", "longitude"]]
+    .groupby(["nom_zdc", "latitude", "longitude"])["nb_vald"]
+    .sum()
+    .reset_index(),
+    lat="latitude",
+    lon="longitude",
+    hover_name="nom_zdc",
+    size="nb_vald",
+    color="nb_vald",
+    color_continuous_scale=degrade_couleur,
+    mapbox_style="carto-positron",
+    width=1300,
+    height=600,
+)
 
 fig
 
