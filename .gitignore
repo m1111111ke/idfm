@@ -135,7 +135,7 @@ secrets/*
 .DS_Store
 
 # data files
-data/* 
+data/*
 
 # pyproject.toml.bak - created by makefile
 pyproject.toml.bak

@@ -4,17 +4,14 @@
 
 import os
 import requests
-import glob
-import numpy as np
-import pandas as pd
 
 # Télécharger les fichiers sources depuis la Plateforme Régionale d'Information pour la Mobilité (PRIM) d'Ile-de-France Mobilités et enregistrer localement.
 
 # Données de validation de titres par trimestre.
 
-url_validations_t1 = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/validations-reseau-ferre-nombre-validations-par-jour-1er-trimestre/exports/csv" 
+url_validations_t1 = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/validations-reseau-ferre-nombre-validations-par-jour-1er-trimestre/exports/csv"
 
-url_validations_t2 = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/validations-reseau-ferre-nombre-validations-par-jour-2eme-trimestre/exports/csv" 
+url_validations_t2 = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/validations-reseau-ferre-nombre-validations-par-jour-2eme-trimestre/exports/csv"
 
 url_validations_t3 = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/validations-reseau-ferre-nombre-validations-par-jour-3eme-trimestre/exports/csv"
 
@@ -22,7 +19,9 @@ url_validations_t4 = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/cat
 
 
 # Chemin du répertoire pour mettre les fichiers csv de validation.
-folder_path_validations_multiples = os.path.join("..","data","raw","validations_multiples")
+folder_path_validations_multiples = os.path.join(
+    "..", "data", "raw", "validations_multiples"
+)
 
 # Vérifier et créer le répertoire de destination s'il n'existe pas.
 
@@ -31,14 +30,13 @@ if not os.path.exists(folder_path_validations_multiples):
     print(f"Répertoire créé : {folder_path_validations_multiples}")
 
 
-
 # Liste et emplacements des gares / stations.
 
-url_stations = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/emplacement-des-gares-idf-data-generalisee/exports/csv" 
+url_stations = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/emplacement-des-gares-idf-data-generalisee/exports/csv"
 
 
 # Chemin du répertoire pour mettre les fichiers csv de liste et emplacement des gares / stations.
-folder_path_stations = os.path.join("..","data","raw","stations")
+folder_path_stations = os.path.join("..", "data", "raw", "stations")
 
 # Vérifier et créer le répertoire de destination s'il n'existe pas.
 
@@ -47,8 +45,8 @@ if not os.path.exists(folder_path_stations):
     print(f"Répertoire créé : {folder_path_stations}")
 
 
-
 # Définir une fonction pour télécharger les sources.
+
 
 def telecharger_csv(url, destination, fichier):
     # Chemin complet du fichier.
@@ -73,15 +71,13 @@ def telecharger_csv(url, destination, fichier):
 
 
 if __name__ == "__main__":
-
     # Télécharger les fichiers de validations.
-    
+
     url = url_validations_t1
     destination = folder_path_validations_multiples
     fichier = "validations_t1.csv"
 
     telecharger_csv(url, destination, fichier)
-
 
     url = url_validations_t2
     destination = folder_path_validations_multiples
@@ -95,13 +91,11 @@ if __name__ == "__main__":
 
     telecharger_csv(url, destination, fichier)
 
-
     url = url_validations_t4
     destination = folder_path_validations_multiples
     fichier = "validations_t4.csv"
 
     telecharger_csv(url, destination, fichier)
-
 
     # Télécharger les fichiers de liste et emplacements des gares / stations.
 

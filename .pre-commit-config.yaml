@@ -1,6 +1,6 @@
 repos:
   - repo: "https://github.com/pre-commit/pre-commit-hooks"
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -35,13 +35,14 @@ repos:
         language: system
       - id: pytest-check
         name: Tests (pytest)
-        stages: [push]
+        stages: [pre-push]
         entry: pytest tests/
         types: [python]
         language: system
         pass_filenames: false
         always_run: true
       - id: codespell
+        args: [-L, "vie,invalide,exemple,informations,reste,trafic,somme,fonction,complet,reponse,formater,pont,connexion"]
         name: Checking typos
         entry: codespell
         types: [python]
