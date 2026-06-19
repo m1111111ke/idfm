@@ -21,6 +21,10 @@ st.write(
 )
 
 st.write(
+    "Ces données concernent les données de validation du réseau ferré où les validations sont rattachées à une station (et non à une ligne). Elles ne comprennent pas le réseau de surface (bus, tram) où la validation est effectuée dans le véhicule lui-même."
+)
+
+st.write(
     "Ces statistiques, actualisées semestriellement, sont accessibles en Open Data via quatre fichiers couvrant les réseaux ferrés et de surface."
 )
 
@@ -160,7 +164,9 @@ fig
 
 st.header("Validations par ligne de transport.")
 
-st.write("Validations par ligne.")
+st.write(
+    "Validations par ligne : somme des validations des stations desservies par la ligne."
+)
 
 # Lire csv de validations par ligne.
 lignes_filepath = os.path.join("..", "data", "processed", "validations_ligne.csv")
@@ -195,6 +201,10 @@ fig
 # Corrélation entre validations et nombre de lignes de transport par station.
 
 st.header("Corrélation entre validations et nombre de lignes de transport par station.")
+
+st.write(
+    "Plus la station abrite plusieurs lignes, plus le nombre de validations est élévé."
+)
 
 # Regroupement par station.
 validations_lignes_df = (
