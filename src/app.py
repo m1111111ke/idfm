@@ -33,22 +33,55 @@ st.write(
 filepath = os.path.join("..", "data", "processed", "validations_fusion.csv")
 df = pd.read_csv(filepath)
 
+
+# Temporel
+
+# Validations par jour de la semaine.
+
+st.header("Validations par jour de la semaine.")
+
+jour_df = (
+    df[["jour_sem_num", "nb_vald"]]
+    .groupby("jour_sem_num")["nb_vald"]
+    .sum()
+    .reset_index()
+)
+
+fig = px.bar(jour_df, x="jour_sem_num", y="nb_vald")
+fig.update_traces(marker_color="#64B5F6")
+
+fig.update_xaxes(title_text="Jour de la semaine, du Lundi au Dimanche")
+fig.update_yaxes(title_text="Validations")
+
+fig
+
+# Validations par mois.
+
+st.header("Validations par mois.")
+
+mois_df = df[["mois", "nb_vald"]].groupby("mois")["nb_vald"].sum().reset_index()
+
+fig = px.bar(mois_df, x="mois", y="nb_vald")
+fig.update_traces(marker_color="#64B5F6")
+
+fig.update_xaxes(title_text="Mois")
+fig.update_yaxes(title_text="Validations")
+
+fig
+
 # Validations par station.
 
 st.header("Validations par station.")
 
 st.write("Top 5 validations par station.")
 
-# Sélectionner nom station et nombre de validations.
-stations_validations_df = df[["nom_zdc", "nb_vald"]].copy()
 
-# Grouper par station et somme des validations.
-top_stations_df = (
-    stations_validations_df.groupby("nom_zdc")["nb_vald"].sum().reset_index()
+stations_validations_df = (
+    df[["nom_zdc", "nb_vald"]].groupby("nom_zdc")["nb_vald"].sum().reset_index()
 )
 
 # Tri pour avoir le top.
-top_stations_df = top_stations_df.sort_values(by="nb_vald", ascending=False)
+top_stations_df = stations_validations_df.sort_values(by="nb_vald", ascending=False)
 
 fig = px.bar(top_stations_df.head(), x="nom_zdc", y="nb_vald")
 fig.update_traces(marker_color="#64B5F6")
