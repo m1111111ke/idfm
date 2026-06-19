@@ -1,3 +1,5 @@
+# Mise à disposition des données via une API.
+
 # Imports
 import logging
 import os

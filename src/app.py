@@ -1,3 +1,5 @@
+# Streamlit
+
 import streamlit as st
 import os
 import pandas as pd
@@ -15,18 +17,27 @@ st.write(
 )
 
 st.write(
-    "Ces données proviennent du système de collecte et de partage des données de validation du réseau de transport en Île-de-France : de l'usage des passes Navigo, permettant à Île-de-France Mobilités d'analyser les flux de voyageurs tout en garantissant un anonymat strict validé par la CNIL. Ces statistiques, actualisées semestriellement, sont accessibles en Open Data via quatre fichiers couvrant les réseaux ferrés et de surface. Ces chiffres offrent une vision incomplète du trafic car ils excluent les tickets magnétiques (ticket T+, Forfait Mobilis, Forfait Paris Visite, etc) et les fraudeurs."
+    "Ces données proviennent du système de collecte et de partage des données de validation du réseau de transport en Île-de-France : de l'usage des passes Navigo, permettant à Île-de-France Mobilités d'analyser les flux de voyageurs tout en garantissant un anonymat strict validé par la CNIL."
 )
 
+st.write(
+    "Ces statistiques, actualisées semestriellement, sont accessibles en Open Data via quatre fichiers couvrant les réseaux ferrés et de surface."
+)
+
+st.write(
+    "Ces chiffres offrent une vision incomplète du trafic car ils excluent les tickets magnétiques (ticket T+, Forfait Mobilis, Forfait Paris Visite, etc) et les fraudeurs."
+)
+
+# Chargement des données.
+
+filepath = os.path.join("..", "data", "processed", "validations_fusion.csv")
+df = pd.read_csv(filepath)
 
 # Validations par station.
 
 st.header("Validations par station.")
 
 st.write("Top 5 validations par station.")
-
-filepath = os.path.join("..", "data", "processed", "validations_fusion.csv")
-df = pd.read_csv(filepath)
 
 # Sélectionner nom station et nombre de validations.
 stations_validations_df = df[["nom_zdc", "nb_vald"]].copy()
@@ -39,7 +50,7 @@ top_stations_df = (
 # Tri pour avoir le top.
 top_stations_df = top_stations_df.sort_values(by="nb_vald", ascending=False)
 
-fig = px.histogram(top_stations_df.head(), x="nom_zdc", y="nb_vald")
+fig = px.bar(top_stations_df.head(), x="nom_zdc", y="nb_vald")
 fig.update_traces(marker_color="#64B5F6")
 
 fig.update_xaxes(title_text=None)
@@ -51,7 +62,7 @@ fig
 
 st.write("Station où il y a le moins de validations.")
 
-fig = px.histogram(top_stations_df.tail(), x="nom_zdc", y="nb_vald")
+fig = px.bar(top_stations_df.tail(), x="nom_zdc", y="nb_vald")
 fig.update_traces(marker_color="#ABD8FD")
 
 fig.update_xaxes(title_text=None)
@@ -103,7 +114,7 @@ top_categorie_titre_df = top_categorie_titre_df.sort_values(
     by="nb_vald", ascending=True
 )  # Tri inversé pour l'affichage graphique.
 
-fig = px.histogram(top_categorie_titre_df, x="nb_vald", y="categorie_titre")
+fig = px.bar(top_categorie_titre_df, x="nb_vald", y="categorie_titre")
 fig.update_traces(marker_color="#64B5F6")
 
 fig.update_xaxes(title_text="Validations")
@@ -122,7 +133,7 @@ st.write("Validations par ligne.")
 lignes_filepath = os.path.join("..", "data", "processed", "validations_ligne.csv")
 lignes_df = pd.read_csv(lignes_filepath)
 
-fig = px.histogram(
+fig = px.bar(
     lignes_df,
     x="Ligne",
     y="somme_nb_vald",
@@ -139,7 +150,7 @@ st.write("Top 5 lignes.")
 # Top lignes.
 top_lignes_df = lignes_df.sort_values(by="somme_nb_vald", ascending=False).head()
 
-fig = px.histogram(top_lignes_df, x="Ligne", y="somme_nb_vald")
+fig = px.bar(top_lignes_df, x="Ligne", y="somme_nb_vald")
 fig.update_traces(marker_color="#64B5F6")
 
 fig.update_xaxes(title_text=None)
@@ -162,14 +173,14 @@ validations_lignes_df.sort_values(by="nb_lignes", ascending=False)
 
 fig = px.scatter(
     validations_lignes_df,
-    x="nb_vald",
-    y="nb_lignes",
+    x="nb_lignes",
+    y="nb_vald",
     hover_data=["nom_zdc"],
     size="nb_vald",
 )
 fig.update_traces(marker_color="#64B5F6")
 
-fig.update_xaxes(title_text="Validations")
-fig.update_yaxes(title_text="Nombre de lignes par station")
+fig.update_xaxes(title_text="Nombre de lignes par station")
+fig.update_yaxes(title_text="Validations")
 
 fig
