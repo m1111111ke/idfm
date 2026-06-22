@@ -49,7 +49,7 @@ df = pd.read_csv(filepath)
 
 # Validations par jour de la semaine.
 
-st.header("Validations par jour de la semaine.")
+st.header("1. Validations par jour de la semaine.")
 
 jour_df = (
     df[["jour_sem_num", "nb_vald"]]
@@ -68,7 +68,7 @@ fig
 
 # Validations par mois.
 
-st.header("Validations par mois.")
+st.header("2. Validations par mois.")
 
 mois_df = df[["mois", "nb_vald"]].groupby("mois")["nb_vald"].sum().reset_index()
 
@@ -82,9 +82,9 @@ fig
 
 # Validations par station.
 
-st.header("Validations par station.")
+st.header("3. Validations par station.")
 
-st.write("Top 5 validations par station.")
+st.write("3.1. Top 5 validations par station.")
 
 
 stations_validations_df = (
@@ -104,7 +104,7 @@ fig
 
 # Stations où il y a le moins de validations.
 
-st.write("Station où il y a le moins de validations.")
+st.write("3.2. Stations où il y a le moins de validations.")
 
 fig = px.bar(top_stations_df.tail(), x="nom_zdc", y="nb_vald")
 fig.update_traces(marker_color="#ABD8FD")
@@ -116,7 +116,7 @@ fig
 
 # Maps : carte des stations avec validations.
 
-st.write("Carte des Stations.")
+st.write("3.3. Carte des Stations.")
 
 degrade_couleur = ["#4EA8DE", "#0077B6", "#03045E"]
 
@@ -141,7 +141,7 @@ fig
 
 # Validations par catégorie de titre.
 
-st.header("Validations par catégorie de titre.")
+st.header("4. Validations par catégorie de titre.")
 
 # Sélectionner catégorie de titre et nombre de validations.
 categorie_titre_validations_df = df[["categorie_titre", "nb_vald"]].copy()
@@ -165,14 +165,16 @@ fig.update_xaxes(title_text="Validations")
 fig.update_yaxes(title_text=None)
 
 fig
-
+st.write(
+    "Forfait Navigo regroupe les forfaits Navigo Annuel, Mois et Semaine.  \nImagine R correspond aux forfaits réservés aux élèves, apprentis et étudiants.  \nForfaits courts : pas d'information dans les sources.  \nContrat Solidarité Transport : réservé aux bénéficiaires d'aides sociales.  \nAméthyste : réservé aux personnes âgées ou handicapées.  \nAutres titres : forfaits spéciaux.  \nNON DEFINI : titres non définis (anomalies)."
+)
 
 # Validations par ligne de transport.
 
-st.header("Validations par ligne de transport.")
+st.header("5. Validations par ligne de transport.")
 
 st.write(
-    "Validations par ligne : somme des validations des stations desservies par la ligne."
+    "5.1. Validations par ligne : somme des validations des stations desservies par la ligne."
 )
 
 # Lire csv de validations par ligne.
@@ -191,7 +193,7 @@ fig.update_yaxes(title_text="Validations")
 
 fig
 
-st.write("Top 5 lignes.")
+st.write("5.2. Top 5 lignes.")
 
 # Top lignes.
 top_lignes_df = lignes_df.sort_values(by="somme_nb_vald", ascending=False).head()
@@ -207,7 +209,9 @@ fig
 
 # Corrélation entre validations et nombre de lignes de transport par station.
 
-st.header("Corrélation entre validations et nombre de lignes de transport par station.")
+st.header(
+    "6. Corrélation entre validations et nombre de lignes de transport par station."
+)
 
 st.write(
     "Plus la station abrite plusieurs lignes, plus le nombre de validations est élévé."
