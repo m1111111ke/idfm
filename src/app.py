@@ -33,10 +33,17 @@ st.write(
 )
 
 # Chargement des données.
-
 filepath = os.path.join("..", "data", "processed", "validations_fusion.csv")
 df = pd.read_csv(filepath)
 
+# Si chargement depuis la base de données SQLite 3 "idfm/db":
+# Connexion à la base de données.
+# db_path = os.path.join("..", "data", "database", "idfm.db")
+# with sqlite3.connect(db_path) as conn :
+# Requête SQL.
+# query = "SELECT * FROM validations_fusion"
+# Charger les données dans un DataFrame.
+# df = pd.read_sql_query(query, conn)
 
 # Temporel
 
