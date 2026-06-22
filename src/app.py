@@ -84,7 +84,7 @@ fig
 
 st.header("3. Validations par station.")
 
-st.write("3.1. Top 5 validations par station.")
+st.write("##### 3.1 Top 5 validations par station.")
 
 
 stations_validations_df = (
@@ -104,7 +104,7 @@ fig
 
 # Stations où il y a le moins de validations.
 
-st.write("3.2. Stations où il y a le moins de validations.")
+st.write("##### 3.2. Stations où il y a le moins de validations.")
 
 fig = px.bar(top_stations_df.tail(), x="nom_zdc", y="nb_vald")
 fig.update_traces(marker_color="#ABD8FD")
@@ -116,7 +116,7 @@ fig
 
 # Maps : carte des stations avec validations.
 
-st.write("3.3. Carte des Stations.")
+st.write("##### 3.3. Carte des Stations.")
 
 degrade_couleur = ["#4EA8DE", "#0077B6", "#03045E"]
 
@@ -174,7 +174,7 @@ st.write(
 st.header("5. Validations par ligne de transport.")
 
 st.write(
-    "5.1. Validations par ligne : somme des validations des stations desservies par la ligne."
+    "##### 5.1. Validations par ligne : somme des validations des stations desservies par la ligne."
 )
 
 # Lire csv de validations par ligne.
@@ -193,7 +193,7 @@ fig.update_yaxes(title_text="Validations")
 
 fig
 
-st.write("5.2. Top 5 lignes.")
+st.write("##### 5.2. Top 5 lignes.")
 
 # Top lignes.
 top_lignes_df = lignes_df.sort_values(by="somme_nb_vald", ascending=False).head()
