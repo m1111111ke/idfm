@@ -35,7 +35,9 @@ def main():
     try:
         # Insérer les données dans les tables.
         insert_data_from_csv(
-            os.path.join("..", "data", "processed", "stations.csv"), "stations", conn
+            os.path.join("..", "data", "processed", "stations.csv"),
+            "stations",
+            conn,
         )
         insert_data_from_csv(
             os.path.join("..", "data", "processed", "validations.csv"),
@@ -45,6 +47,11 @@ def main():
         insert_data_from_csv(
             os.path.join("..", "data", "processed", "validations_ligne.csv"),
             "validations_ligne",
+            conn,
+        )
+        insert_data_from_csv(
+            os.path.join("..", "data", "processed", "validations_fusion.csv"),
+            "validations_fusion",
             conn,
         )
     except Exception as e:
