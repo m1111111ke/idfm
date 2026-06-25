@@ -241,8 +241,6 @@ st.header(
     "5. Corrélation entre validations et nombre de lignes de transport par station."
 )
 
-st.write("Plus la station abrite de lignes, plus le nombre de validations est élévé.")
-
 # Regroupement par station.
 validations_lignes_df = (
     df.groupby("nom_zdc").agg({"nb_lignes": "max", "nb_vald": "sum"}).reset_index()
