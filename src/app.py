@@ -4,6 +4,9 @@ import streamlit as st
 import os
 import pandas as pd
 import plotly.express as px
+import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 st.image(
     "https://upload.wikimedia.org/wikipedia/fr/c/ce/IdFMobilit%C3%A9s.svg", width=300
@@ -36,7 +39,7 @@ st.write(
 filepath = os.path.join("..", "data", "processed", "validations_fusion.csv")
 df = pd.read_csv(filepath)
 
-# Si chargement depuis la base de données SQLite 3 "idfm/db":
+# Si chargement depuis la base de données SQLite 3 "idfm.db":
 # Connexion à la base de données.
 # db_path = os.path.join("..", "data", "database", "idfm.db")
 # with sqlite3.connect(db_path) as conn :
@@ -49,7 +52,9 @@ df = pd.read_csv(filepath)
 
 # Validations par jour de la semaine.
 
-st.header("1. Validations par jour de la semaine.")
+st.header("1. Validations par jour et par mois.")
+
+st.write("##### 1.1. Validations par jour.")
 
 jour_df = (
     df[["jour_sem_num", "nb_vald"]]
@@ -68,7 +73,7 @@ fig
 
 # Validations par mois.
 
-st.header("2. Validations par mois.")
+st.write("##### 1.2. Validations par mois.")
 
 mois_df = df[["mois", "nb_vald"]].groupby("mois")["nb_vald"].sum().reset_index()
 
@@ -80,11 +85,34 @@ fig.update_yaxes(title_text="Validations")
 
 fig
 
+# Heatmap validations par jour et par mois.
+
+st.write("##### 1.3. Validations par jour selon mois.")
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+pivot_data = df.pivot_table(
+    index="mois", columns="jour_sem_num", values="nb_vald", aggfunc="sum"
+)
+
+sns.heatmap(
+    pivot_data,
+    ax=ax,
+    cmap="Blues",
+    annot=pivot_data / 1_000_000,
+    fmt=".1f",  # Format des nombres.
+    cbar_kws={"format": ticker.FuncFormatter(lambda x, pos: f"{x * 1e-6:.1f}M")},
+)
+ax.set_xlabel("Jour de la semaine, du Lundi au Dimanche")
+ax.set_ylabel("Mois")
+
+st.pyplot(fig)
+
 # Validations par station.
 
-st.header("3. Validations par station.")
+st.header("2. Validations par station.")
 
-st.write("##### 3.1 Top 5 validations par station.")
+st.write("##### 2.1 Top 5 validations par station.")
 
 
 stations_validations_df = (
@@ -104,7 +132,7 @@ fig
 
 # Stations où il y a le moins de validations.
 
-st.write("##### 3.2. Stations où il y a le moins de validations.")
+st.write("##### 2.2. Stations où il y a le moins de validations.")
 
 fig = px.bar(top_stations_df.tail(), x="nom_zdc", y="nb_vald")
 fig.update_traces(marker_color="#ABD8FD")
@@ -116,7 +144,7 @@ fig
 
 # Maps : carte des stations avec validations.
 
-st.write("##### 3.3. Carte des Stations.")
+st.write("##### 2.3. Carte des Stations.")
 
 degrade_couleur = ["#4EA8DE", "#0077B6", "#03045E"]
 
@@ -141,7 +169,7 @@ fig
 
 # Validations par catégorie de titre.
 
-st.header("4. Validations par catégorie de titre.")
+st.header("3. Validations par catégorie de titre.")
 
 # Sélectionner catégorie de titre et nombre de validations.
 categorie_titre_validations_df = df[["categorie_titre", "nb_vald"]].copy()
@@ -171,10 +199,10 @@ st.write(
 
 # Validations par ligne de transport.
 
-st.header("5. Validations par ligne de transport.")
+st.header("4. Validations par ligne de transport.")
 
 st.write(
-    "##### 5.1. Validations par ligne : somme des validations des stations desservies par la ligne."
+    "##### 4.1. Validations par ligne : somme des validations des stations desservies par la ligne."
 )
 
 # Lire csv de validations par ligne.
@@ -193,7 +221,7 @@ fig.update_yaxes(title_text="Validations")
 
 fig
 
-st.write("##### 5.2. Top 5 lignes.")
+st.write("##### 4.2. Top 5 lignes.")
 
 # Top lignes.
 top_lignes_df = lignes_df.sort_values(by="somme_nb_vald", ascending=False).head()
@@ -210,12 +238,10 @@ fig
 # Corrélation entre validations et nombre de lignes de transport par station.
 
 st.header(
-    "6. Corrélation entre validations et nombre de lignes de transport par station."
+    "5. Corrélation entre validations et nombre de lignes de transport par station."
 )
 
-st.write(
-    "Plus la station abrite plusieurs lignes, plus le nombre de validations est élévé."
-)
+st.write("Plus la station abrite de lignes, plus le nombre de validations est élévé.")
 
 # Regroupement par station.
 validations_lignes_df = (
