@@ -5,7 +5,7 @@
 import os
 import requests
 
-# Télécharger les fichiers sources depuis la Plateforme Régionale d'Information pour la Mobilité (PRIM) d'Ile-de-France Mobilités et enregistrer localement.
+# 1. Télécharger les fichiers sources depuis la Plateforme Régionale d'Information pour la Mobilité (PRIM) d'Ile-de-France Mobilités et enregistrer localement.
 
 # Données de validation de titres par trimestre.
 
@@ -30,7 +30,7 @@ if not os.path.exists(folder_path_validations_multiples):
     print(f"Répertoire créé : {folder_path_validations_multiples}")
 
 
-# Liste et emplacements des gares / stations.
+# 2. Liste et emplacements des gares / stations.
 
 url_stations = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/emplacement-des-gares-idf-data-generalisee/exports/csv"
 
@@ -43,6 +43,22 @@ folder_path_stations = os.path.join("..", "data", "raw", "stations")
 if not os.path.exists(folder_path_stations):
     os.makedirs(folder_path_stations)
     print(f"Répertoire créé : {folder_path_stations}")
+
+
+# 3. Télécharger le fichier source de la liste des écoles (maternelles, primaires, collèges et lycées) et leur localisation en Ile-de-France depuis "Région Ile-de-France Open data."
+
+# Objectif : compter le nombre d'écoles à proximité de chaque station et voir si cela influe le nombre de validations de titres Imagine R.
+
+url_ecoles = "https://data.iledefrance.fr/api/explore/v2.1/catalog/datasets/les_etablissements_d_enseignement_des_1er_et_2d_degres_en_idf/exports/csv?lang=fr&timezone=Europe%2FBerlin&use_labels=true&delimiter=%3B"
+
+# Chemin du répertoire pour mettre le fichier csv d'emplacement des écoles.
+folder_path_ecoles = os.path.join("..", "data", "raw")
+
+# Vérifier et créer le répertoire de destination s'il n'existe pas.
+
+if not os.path.exists(folder_path_ecoles):
+    os.makedirs(folder_path_ecoles)
+    print(f"Répertoire créé : {folder_path_ecoles}")
 
 
 # Définir une fonction pour télécharger les sources.
@@ -102,5 +118,13 @@ if __name__ == "__main__":
     url = url_stations
     destination = folder_path_stations
     fichier = "stations.csv"
+
+    telecharger_csv(url, destination, fichier)
+
+    # Télécharger le fichier des emplacements des écoles.
+
+    url = url_ecoles
+    destination = folder_path_ecoles
+    fichier = "ecoles.csv"
 
     telecharger_csv(url, destination, fichier)
