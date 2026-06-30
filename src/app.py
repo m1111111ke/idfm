@@ -234,11 +234,106 @@ fig.update_yaxes(title_text="Validations")
 
 fig
 
+# Corrélation entre nombre d'écoles à proximité des stations et le nombre de validation de titres Imagine R.
+
+st.header(
+    "5. Corrélation entre nombre d'écoles à proximité des stations et le nombre de validations de titres Imagine R."
+)
+
+st.write(
+    "Enrichir les données avec la liste des écoles (maternelles, primaires, collèges et lycées) et leur localisation en Ile-de-France depuis 'Région Ile-de-France Open data'."
+)
+
+st.write(
+    "Objectif : compter le nombre d'écoles à proximité de chaque station et voir si cela influe le nombre de validations de titres Imagine R."
+)
+
+st.write(
+    "Maternelles, primaires, collèges et lycées sont comptés séparément au sein d'une même école."
+)
+
+# Créer une colonne pourcentage validations Imagine R par rapport à la validation totale par station.
+
+# Validations Imagine R par station.
+imagine_r_par_station = (
+    df[df["categorie_titre"] == "Imagine R"].groupby("nom_zdc")["nb_vald"].sum()
+)
+
+# Validations totales par station.
+total_par_station = df.groupby("nom_zdc")["nb_vald"].sum()
+
+# Combiner les données vers un nouveau DataFrame.
+part_imagine_r_df = pd.DataFrame(
+    {
+        "nb_vald": total_par_station,
+        "nb_vald_imagine_r": imagine_r_par_station,
+        "pourcent_vald_imagine_r": (
+            imagine_r_par_station / total_par_station * 100
+        ).round(2),
+    }
+).reset_index()
+
+ecoles_stations_df = (
+    df.groupby("nom_zdc").agg({"nb_ecoles": "max", "nb_vald": "sum"}).reset_index()
+)
+
+fusion_ecoles_df = ecoles_stations_df.merge(
+    part_imagine_r_df, how="left", left_on="nom_zdc", right_on="nom_zdc"
+)
+
+# Supprimer colonnes en doublon.
+colonnes_supprimer_merge = ["nb_vald_y"]
+fusion_ecoles_df = fusion_ecoles_df.drop(columns=colonnes_supprimer_merge)
+
+# Renommer une colonne.
+fusion_ecoles_df.rename(columns={"nb_vald_x": "nb_vald"}, inplace=True)
+
+fig = px.scatter(
+    fusion_ecoles_df,
+    x="nb_ecoles",
+    y="nb_vald_imagine_r",
+    hover_data=["nom_zdc"],
+    size="nb_vald_imagine_r",
+)
+fig.update_traces(marker_color="#64B5F6")
+
+fig.update_xaxes(title_text="Nombre d'écoles à proximité")
+fig.update_yaxes(title_text="Validations de titre Imagine R")
+
+fig
+
+st.write(
+    "Il n'y a pas de corrélation entre le nombre d'écoles accessibles par station (500m) et le nombre de validations de titre de transport 'Imagine R'."
+)
+
+# Corrélation entre le nombre d'écoles à proximité des stations et la part de validation de titres Imagine R sur le nombre de validations totales.
+
+st.header(
+    "6. Corrélation entre le nombre d'écoles à proximité des stations et la part de validation de titres Imagine R sur le nombre de validations totales."
+)
+
+fig = px.scatter(
+    fusion_ecoles_df,
+    x="nb_ecoles",
+    y="pourcent_vald_imagine_r",
+    hover_data=["nom_zdc"],
+    size="nb_vald_imagine_r",
+)
+fig.update_traces(marker_color="#64B5F6")
+
+fig.update_xaxes(title_text="Nombre d'écoles à proximité")
+fig.update_yaxes(title_text="% Validations de titre Imagine R")
+
+fig
+
+st.write(
+    "Il n'y a pas de corrélation entre le nombre d'écoles accessibles par station (500m) et la part de validations de titre de transport 'Imagine R' sur le nombre de validations totales."
+)
 
 # Corrélation entre validations et nombre de lignes de transport par station.
 
 st.header(
-    "5. Corrélation entre validations et nombre de lignes de transport par station."
+    "7. Corrélation entre validations et nombre de lignes de transport par station."
 )
 
 # Regroupement par station.
@@ -262,3 +357,7 @@ fig.update_xaxes(title_text="Nombre de lignes par station")
 fig.update_yaxes(title_text="Validations")
 
 fig
+
+st.write(
+    "Il y a plutôt une corrélation entre le nombre de validation de titre de transport et nombre de lignes de transport par station."
+)
