@@ -5,7 +5,7 @@
 import os
 import requests
 
-# 1. Télécharger les fichiers sources depuis la Plateforme Régionale d'Information pour la Mobilité (PRIM) d'Ile-de-France Mobilités et enregistrer localement.
+# 1. Télécharger les fichiers sources de nombre de validations de titre de transport et liste et emplacements des stations depuis la Plateforme Régionale d'Information pour la Mobilité (PRIM) d'Ile-de-France Mobilités et enregistrer localement.
 
 # Données de validation de titres par trimestre.
 

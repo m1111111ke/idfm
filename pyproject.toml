@@ -1,0 +1,3 @@
+[tool.codespell]
+# Mots à ignorer en minuscules, séparés par des virgules.
+ignore-words-list = "datastream,hyperparameter,Adresse, Sigle"
