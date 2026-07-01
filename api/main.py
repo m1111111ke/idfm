@@ -98,7 +98,7 @@ async def health_check():
     return {"status": "healthy", "service": "Data API"}
 
 
-#   SECURITE.
+# SECURITE.
 API_KEY_NAME = "X-API-Key"
 API_KEY = os.getenv("MY_API_KEY", "ma_cle_secrete_123")
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=True)

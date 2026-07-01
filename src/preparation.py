@@ -10,6 +10,7 @@ import geopandas as gpd
 
 # 1. Données de validation de titres.
 
+print("Traitement des données de validation de titre...")
 
 # Objectif : combiner les fichiers sources de validations en un seul fichier csv.
 
@@ -137,9 +138,12 @@ validations_df.loc[
     "id_zdc",
 ] = "71434"
 
+print("Traitement des données de validation de titre terminé !")
+
 
 # 2. Liste et emplacement des gares / stations.
 
+print("Traitement des données de stations...")
 
 # Liste des stations généralisée (une station peut regrouper plusieurs lignes de transport associées).
 filepath_stations = os.path.join("..", "data", "raw", "stations", "stations.csv")
@@ -244,8 +248,12 @@ stations_df = stations_df[
 # Ajout colonne "nb_lignes" nombre de ligne selon contenu de "res_com" (nombre de lignes qu'abrite une station).
 stations_df["nb_lignes"] = stations_df["res_com"].str.count("/") + 1
 
+print("Traitement des données de stations terminé !")
+
 
 # 3. Liste et emplacements des écoles.
+
+print("Traitement des données de liste et emplacement écoles...")
 
 filepath_ecoles = os.path.join("..", "data", "raw", "ecoles.csv")
 ecoles_df = pd.read_csv(filepath_ecoles, sep=";")
@@ -298,8 +306,12 @@ ecoles_df.columns = (
 # Suppimer les valeurs manquantes qui correspondent à latitude_wgs84 et longitude_wgs84.
 ecoles_df = ecoles_df.dropna(subset=["latitude_wgs84"])
 
+print("Traitement des données de liste et emplacement écoles terminé !")
+
 
 # 4. Agrégation : cross-join stations et ecoles avec GeoPandas.
+
+print("Agrégation : cross-join stations et ecoles avec GeoPandas.")
 
 # Convertir les DataFrames stations et écoles en GeoDataFrames.
 gdf_stations = gpd.GeoDataFrame(
@@ -349,6 +361,10 @@ ecoles_stations_df = ecoles_stations_df.drop_duplicates()
 
 # 5. Agrégation : merge données de validations avec la liste et emplacements des stations.
 
+print(
+    "Agrégation : merge données de validations avec la liste et emplacements des stations."
+)
+
 validations_fusion_df = validations_df.merge(
     stations_df, how="left", left_on="id_zdc", right_on="id_ref_zdc"
 )
@@ -378,6 +394,8 @@ validations_fusion_df = validations_fusion_df.drop(columns=colonnes_a_supprimer)
 
 # 6. Agrégation : merge validations_fusion_df et ecoles_stations_df.
 
+print("Agrégation : merge validations_fusion_df et ecoles_stations_df.")
+
 df = validations_fusion_df.merge(
     ecoles_stations_df, how="left", left_on="id_zdc", right_on="id_ref_zdc"
 )
@@ -401,6 +419,7 @@ df["nb_ecoles"] = df["nb_ecoles"].astype(int)
 
 # 7. Table Nombre de validations par lignes de transport.
 
+print("Création Table Nombre de validations par lignes de transport.")
 
 # List comprehension pour calculer le nombre de validations par lignes de transport.
 
@@ -468,6 +487,7 @@ lignes_df = pd.DataFrame(
 
 # 8. Exportation des fichiers traités vers csv.
 
+print("Exportation des fichiers traités vers csv...")
 
 # 8.1. Sauvegarder les données de validations traitées dans un nouveau csv.
 
@@ -511,3 +531,5 @@ processed_ligne_filepath = os.path.join(
 lignes_df.to_csv(processed_ligne_filepath, index=False, encoding="utf-8-sig")
 
 print(f"Fichier 'validations par ligne' enregistré sous : {processed_ligne_filepath}")
+
+print("Préparations des fichiers terminées.")
