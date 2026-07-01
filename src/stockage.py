@@ -7,6 +7,8 @@ import os
 
 # Fonction création et connexion à la base de données.
 
+print("Stockage des données dans une base de données SQLite 3.")
+
 
 def create_database_connection():
     # Chemin du répertoire pour la base de donnée.
@@ -18,6 +20,9 @@ def create_database_connection():
 
     db_path = os.path.join("..", "data", "database", "idfm.db")
     return sqlite3.connect(db_path)
+
+
+print("Base de donnée SQLite créée !")
 
 
 # Fonction pour créer les tables et importer les données vers la base.
@@ -34,26 +39,43 @@ def main():
 
     try:
         # Insérer les données dans les tables.
+
+        print("Insertion des données de stations...")
+
         insert_data_from_csv(
             os.path.join("..", "data", "processed", "stations.csv"),
             "stations",
             conn,
         )
+        print("Insertion des données de stations terminée !")
+
+        print("Insertion des données de validations...")
+
         insert_data_from_csv(
             os.path.join("..", "data", "processed", "validations.csv"),
             "validations",
             conn,
         )
+        print("Insertion des données de validations terminée !")
+
+        print("Insertion des données de validations par ligne...")
+
         insert_data_from_csv(
             os.path.join("..", "data", "processed", "validations_ligne.csv"),
             "validations_ligne",
             conn,
         )
+        print("Insertion des données de validations par ligne terminée !")
+
+        print("Insertion des données de validations fusion...")
+
         insert_data_from_csv(
             os.path.join("..", "data", "processed", "validations_fusion.csv"),
             "validations_fusion",
             conn,
         )
+        print("Insertion des données de validations fusion terminée !")
+
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
