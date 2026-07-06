@@ -164,9 +164,7 @@ async def create_station(station: StationCreate):
             )
 
     # Convertir le modèle Pydantic en dictionnaire Python.
-    nouvelle_station = (
-        station.model_dump()
-    )  # Utilise station.dict() si tu as une vieille version de Pydantic.
+    nouvelle_station = station.model_dump()
 
     # Ajouter la station à la liste globale.
     stations_list.append(nouvelle_station)
