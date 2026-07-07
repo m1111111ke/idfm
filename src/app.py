@@ -1,6 +1,7 @@
 # Streamlit
 
 import streamlit as st
+import sqlite3
 import os
 import pandas as pd
 import plotly.express as px
@@ -35,7 +36,7 @@ st.write(
     "Ces chiffres offrent une vision incomplète du trafic car ils excluent les tickets magnétiques (ticket T+, Forfait Mobilis, Forfait Paris Visite, etc) et les fraudeurs."
 )
 
-# Chargement des données.
+# Si chargement depuis CSV données validations_fusion.
 filepath = os.path.join("..", "data", "processed", "validations_fusion.csv")
 df = pd.read_csv(filepath)
 
@@ -205,9 +206,18 @@ st.write(
     "##### 4.1. Validations par ligne : somme des validations des stations desservies par la ligne."
 )
 
-# Lire csv de validations par ligne.
-lignes_filepath = os.path.join("..", "data", "processed", "validations_ligne.csv")
-lignes_df = pd.read_csv(lignes_filepath)
+# Si chargement depuis csv de validations par ligne.
+# lignes_filepath = os.path.join("..", "data", "processed", "validations_ligne.csv")
+# lignes_df = pd.read_csv(lignes_filepath)
+
+# Si chargement depuis la base de données SQLite 3 "idfm.db":
+# Connexion à la base de données SQLite, table validations_ligne.
+db_path = os.path.join("..", "data", "database", "idfm.db")
+with sqlite3.connect(db_path) as conn:
+    # Requête SQL.
+    query = "SELECT * FROM validations_ligne"
+    # Charger les données dans un DataFrame.
+    lignes_df = pd.read_sql_query(query, conn)
 
 fig = px.bar(
     lignes_df,
@@ -309,7 +319,7 @@ st.write(
 # Corrélation entre le nombre d'écoles à proximité des stations et la part de validation de titres Imagine R sur le nombre de validations totales.
 
 st.header(
-    "6. Corrélation entre le nombre d'écoles à proximité des stations et la part de validation de titres Imagine R sur le nombre de validations totales."
+    "6. Corrélation entre le nombre d'écoles à proximité des stations et la part de validation de titres Imagine R sur le nombre total de validations."
 )
 
 fig = px.scatter(
@@ -327,7 +337,7 @@ fig.update_yaxes(title_text="% Validations de titre Imagine R")
 fig
 
 st.write(
-    "Il n'y a pas de corrélation entre le nombre d'écoles accessibles par station (500m) et la part de validations de titre de transport 'Imagine R' sur le nombre de validations totales."
+    "Il n'y a pas de corrélation entre le nombre d'écoles accessibles par station (500m) et la part de validations de titre de transport 'Imagine R' sur le nombre total de validations."
 )
 
 # Corrélation entre validations et nombre de lignes de transport par station.
@@ -359,5 +369,5 @@ fig.update_yaxes(title_text="Validations")
 fig
 
 st.write(
-    "Il y a plutôt une corrélation entre le nombre de validation de titre de transport et nombre de lignes de transport par station."
+    "Il y a plutôt une corrélation entre le nombre de validation de titre de transport et nombre de lignes de transport qu'abrite une station."
 )
