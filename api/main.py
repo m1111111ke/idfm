@@ -38,6 +38,7 @@ async def lifespan(app: FastAPI):
             "res_com",
             "mode",
             "nb_lignes",
+            "nb_ecoles",
             "latitude",
             "longitude",
         ]
@@ -120,6 +121,7 @@ class StationCreate(BaseModel):
     res_com: str
     mode: str
     nb_lignes: int
+    nb_ecoles: int
     latitude: float
     longitude: float
 
