@@ -42,7 +42,7 @@ repos:
         pass_filenames: false
         always_run: true
       - id: codespell
-        args: [-L, "vie,invalide,exemple,informations,reste,trafic,somme,fonction,complet,reponse,formater,pont,connexion"]
+        args: [-L, "vie,invalide,exemple,informations,reste,trafic,somme,fonction,complet,reponse,formater,pont,connexion, agregation"]
         name: Checking typos
         entry: codespell
         types: [python]
