@@ -39,4 +39,4 @@ jobs:
           
       - name: Deploy MkDocs documentation
         run: |
-          make deploy_docs
+          mkdocs gh-deploy --force
