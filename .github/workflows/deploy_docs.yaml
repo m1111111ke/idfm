@@ -32,10 +32,10 @@ jobs:
         run: |
           make setup
 
-      - name: Install MkDocs
+      - name: Install MkDocs, Theme and Plugins
         run: |
           python -m pip install --upgrade pip
-          pip install mkdocs mkdocs-material
+          pip install mkdocs mkdocs-material mkdocstrings mkdocstrings-python
           
       - name: Deploy MkDocs documentation
         run: |
