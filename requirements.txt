@@ -5,6 +5,6 @@ plotly==6.4.0
 PyYAML==6.0.3
 Requests==2.34.2
 seaborn==0.13.2
-streamlit==1.51.0
+streamlit
 fastapi==0.139.0
 pydantic==2.13.4
