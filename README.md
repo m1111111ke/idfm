@@ -1,228 +1,164 @@
-# Data Science Boilerplate
+# IDFM — Analyse des données de validation de titres de transport
 
-Welcome to the **Data Science Boilerplate**: A modern, production-ready template for data science projects with best practices.
+Projet de data science analysant les données ouvertes d'Île-de-France Mobilités (IDFM) sur les **validations de titres de transport** du réseau ferré francilien (métro, RER, train). Le projet couvre l'ensemble de la chaîne : collecte des données, préparation/agrégation, stockage, exposition via une API sécurisée, et restitution via un dashboard interactif.
 
-This documentation contains the following sections:
+## Sommaire
 
-- [Quick Start](#quick-start)
-- [Project Structure](#project-structure)
-- [Package Customization](#package-customization)
-- [Development Workflow](#development-workflow)
+- [Contexte](#contexte)
+- [Sources de données](#sources-de-données)
+- [Structure du projet](#structure-du-projet)
+- [Installation](#installation)
+- [Utilisation](#utilisation)
+- [API](#api)
+- [Dashboard](#dashboard)
 - [Documentation](#documentation)
+- [Tests](#tests)
+- [Stack technique](#stack-technique)
 
-# Quick Start
+## Contexte
 
-## 1. Create a new repository
+Les données proviennent du système de collecte et de partage de la Plateforme Régionale d'Information pour la Mobilité (PRIM) d'Île-de-France Mobilités, issu de l'usage des passes Navigo. Elles permettent d'analyser les flux de voyageurs sur le réseau ferré (les validations y sont rattachées à une station, contrairement au réseau de surface — bus, tram — où la validation se fait dans le véhicule). Ces chiffres sont mis à jour semestriellement et offrent une vision partielle du trafic (hors tickets magnétiques, forfaits spéciaux et fraude).
 
-### Option A: Use as GitHub Template
-1. Click "Use this template" on GitHub
-2. Choose "Create a new repository"
-3. Name your repository
+Le projet explore notamment :
+- la répartition des validations par jour de la semaine et par mois,
+- les stations avec le plus et le moins de validations,
+- une carte interactive des stations,
+- la répartition par catégorie de titre de transport (Navigo, Imagine R, Améthyste, etc.),
+- les validations agrégées par ligne,
+- une corrélation entre la proximité des écoles et l'usage du forfait Imagine R,
+- une corrélation entre le nombre de lignes desservant une station et son volume de validations.
 
-### Option B: Clone and Customize
-```bash
-git clone <this-repo-url>
-cd <your-project-name>
+## Sources de données
+
+Données ouvertes récupérées automatiquement depuis :
+- **data.iledefrance-mobilites.fr** : validations de titres par trimestre (réseau ferré) et emplacement des gares/stations.
+- **data.iledefrance.fr** : liste et localisation des établissements scolaires (1er et 2d degrés) en Île-de-France.
+
+## Structure du projet
+
+```
+├── api/                     # API FastAPI pour servir les données traitées
+│   └── main.py
+├── src/                     # Scripts du pipeline de données
+│   ├── collecte.py          # Téléchargement des sources (validations, stations, écoles)
+│   ├── preparation.py       # Nettoyage, fusion et agrégation des données
+│   ├── stockage.py          # Chargement des données dans une base SQLite
+│   └── app.py                # Dashboard Streamlit d'analyse et de visualisation
+├── notebooks/               # Notebooks Jupyter d'exploration et d'analyse
+│   ├── 1_idfm.ipynb
+│   ├── 2_idfm_analyses.ipynb
+│   ├── 3_idfm_db.ipynb
+│   └── 4_idfm_geopandas.ipynb
+├── config/                  # Fichiers de configuration
+├── docs/                    # Documentation (MkDocs)
+├── tests/                   # Tests unitaires et d'intégration
+├── requirements.txt         # Dépendances du projet
+├── Makefile                 # Commandes de développement
+└── mkdocs.yaml
 ```
 
-## 2. Customize Package Name (Optional)
+## Installation
 
-You can easily customize the package name to match your project:
-
-```bash
-# Customize during setup
-make setup PACKAGE_NAME=my-awesome-project
-
-# Or customize separately
-make customize-package PACKAGE_NAME=my-awesome-project
-```
-
-The package name will automatically be converted to a valid Python module name (hyphens become underscores).
-
-## 3. Setup Development Environment
+Prérequis : Python 3.11.
 
 ```bash
-# Install dependencies and setup virtual environment
+git clone https://github.com/m1111111ke/idfm.git
+cd idfm
+
+# Créer un environnement virtuel et installer les dépendances
 make setup
 
-# Install pre-commit hooks
+# Installer les hooks pre-commit
 make install_precommit
 ```
 
-That's it! Your development environment is ready.
-
-# Project Structure
-
-This boilerplate provides a recommended repository structure following Python best practices:
-
-```
-├── src/                           # Source code (src layout)
-│   └── your_package_name/         # Your main package
-│       ├── __init__.py
-│       ├── core/                  # Core functionality
-│       │   ├── __init__.py
-│       │   ├── data_processing.py
-│       │   └── models.py
-│       └── utils/                 # Utility functions
-│           ├── __init__.py
-│           └── helpers.py
-├── tests/                         # Test files
-│   ├── unit_tests/
-│   ├── integration_tests/
-│   └── data/
-├── notebooks/                     # Jupyter notebooks
-├── docs/                          # Documentation
-├── config/                        # Configuration files
-├── bin/                           # Executable scripts
-├── data/                          # Data files (gitignored)
-├── secrets/                       # Sensitive files (gitignored)
-├── pyproject.toml                 # Project configuration
-├── requirements.txt               # Runtime dependencies
-├── Makefile                       # Development commands
-└── .pre-commit-config.yaml        # Pre-commit hooks
-```
-
-## Key Benefits of This Structure
-
-- **Src Layout**: Prevents import confusion and follows Python best practices
-- **Clear Separation**: Source code, tests, notebooks, and configuration are clearly separated
-- **Scalable**: Easy to add new modules and packages
-- **Standard**: Follows industry conventions
-
-# Package Customization
-
-The boilerplate makes it easy to customize the package name for your project:
-
-## How It Works
-
-- **Package Name**: The name you specify (e.g., "my-awesome-project")
-- **Python Module**: Automatically converted (e.g., "my_awesome_project")
-
-## Customization Commands
+Ou manuellement :
 
 ```bash
-# Show current configuration
-make customize-package
-
-# Customize package name
-make customize-package PACKAGE_NAME=my-ds-project
-
-# Customize during setup
-make setup PACKAGE_NAME=my-ds-project
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-## What Gets Updated
+## Utilisation
 
-- `pyproject.toml`: Package name and module configuration
-- `src/` directory: Renamed to match your module name
-- All imports will work with the new module name
-
-## Examples
-
-| Package Name | Python Module | Import Statement |
-|--------------|---------------|------------------|
-| `my-project` | `my_project` | `from my_project import ...` |
-| `awesome-ds` | `awesome_ds` | `from awesome_ds import ...` |
-| `ml-pipeline` | `ml_pipeline` | `from ml_pipeline import ...` |
-
-# Development Workflow
-
-## Available Commands
+Le pipeline de données s'exécute en trois étapes, depuis le dossier `src/` :
 
 ```bash
-# Setup development environment
-make setup
+cd src
 
-# Install pre-commit hooks
-make install_precommit
+# 1. Télécharger les fichiers sources (validations, stations, écoles)
+python collecte.py
 
-# Format and lint code
-make format
+# 2. Nettoyer, fusionner et agréger les données
+python preparation.py
 
-# Run tests
+# 3. Charger les données dans une base SQLite locale (data/database/idfm.db)
+python stockage.py
+```
+
+## API
+
+Une API FastAPI sécurisée par clé permet de servir les données traitées (stations et validations par station/par ligne).
+
+```bash
+cd api
+uvicorn main:app --reload
+```
+
+Endpoints principaux (authentification via l'en-tête `X-API-Key`) :
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| GET | `/` | Message de bienvenue |
+| GET | `/health` | Statut de l'API |
+| GET | `/api/stations` | Liste des stations |
+| POST | `/api/stations` | Créer une nouvelle station |
+| GET | `/api/validations_station` | Validations pour toutes les stations |
+| GET | `/api/validations_station/{id_zdc}` | Validations pour une station donnée |
+| GET | `/api/validations/ligne` | Validations pour toutes les lignes |
+| GET | `/api/validations/ligne/{Ligne}` | Validations pour une ligne donnée |
+| POST | `/api/validations/ligne` | Créer une nouvelle ligne |
+
+La documentation interactive Swagger est disponible sur `/docs` une fois l'API lancée.
+
+## Dashboard
+
+Un dashboard Streamlit permet d'explorer visuellement les données (graphiques, carte des stations, corrélations) :
+
+```bash
+cd src
+streamlit run app.py
+```
+
+## Documentation
+
+La documentation du projet est générée avec MkDocs (thème Material).
+
+```bash
+# Servir la documentation en local sur http://localhost:8001
+make serve_docs_locally
+
+# Déployer sur GitHub Pages
+make deploy_docs
+```
+
+## Tests
+
+```bash
 make run_tests
-
-# Serve documentation locally
-make serve_docs_locally
-
-# Deploy documentation
-make deploy_docs
 ```
 
-## Code Quality Tools
+## Stack technique
 
-This boilerplate includes several tools to maintain code quality:
+- **Données & traitement** : pandas, geopandas
+- **Visualisation** : plotly, matplotlib, seaborn, Streamlit
+- **API** : FastAPI, Pydantic
+- **Stockage** : SQLite
+- **Qualité de code** : pre-commit, Ruff, Bandit
+- **Documentation** : MkDocs Material
+- **Tests** : Pytest
 
-- **Pre-commit hooks**: Automatically format and lint code on commit
-- **Ruff**: Fast Python linter and formatter
-- **Bandit**: Security vulnerability detection
-- **Pytest**: Testing framework
-- **nbstripout**: Clean Jupyter notebook outputs
+## Licence
 
-## Git Workflow
-
-1. **Pre-commit hooks** automatically format and lint your code
-2. **Tests run on push** to ensure code quality
-3. **CI pipeline** validates code on GitHub
-4. **Pull request template** helps with code reviews
-
-# Documentation
-
-## Local Development
-
-```bash
-# Serve documentation locally
-make serve_docs_locally
-```
-
-This will serve the documentation at `http://localhost:8001`
-
-## Publishing
-
-The documentation is automatically built and deployed to GitHub Pages on each push to the `main` branch.
-
-To manually deploy:
-```bash
-make deploy_docs
-```
-
-## Configuration
-
-- **MkDocs**: Documentation generator
-- **Material for MkDocs**: Beautiful theme
-- **GitHub Pages**: Automatic deployment
-
-# Adding Dependencies
-
-## Runtime Dependencies
-
-Add to `requirements.txt`:
-```
-pandas>=2.0.0
-numpy>=1.24.0
-scikit-learn>=1.3.0
-```
-
-## Development Dependencies
-
-Add to `pyproject.toml` under `[project.optional-dependencies]`:
-```toml
-dev = [
-    "pre-commit>=3.0.0",
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-]
-```
-
-# Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `make run_tests`
-5. Format code: `make format`
-6. Submit a pull request
-
-# License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+Ce projet est sous licence MIT — voir le fichier LICENSE pour plus de détails.
