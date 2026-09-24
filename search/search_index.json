@@ -1,0 +1,1 @@
+{"config":{"lang":["en"],"separator":"[\\s\\-]+","pipeline":["stopWordFilter"],"fields":{"title":{"boost":1000.0},"text":{"boost":1.0},"tags":{"boost":1000000.0}}},"docs":[{"location":"","title":"Welcome to the documentation!","text":"<p>For more information, make sure to check the Material for MkDocs documentation</p>"},{"location":"code/","title":"Code","text":""}]}
