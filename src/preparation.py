@@ -472,6 +472,13 @@ lignes_df = pd.DataFrame(
 
 print("Exportation des fichiers traités vers csv...")
 
+# Chemin du répertoire pour les fichiers traités.
+processed_folder_path = os.path.join("..", "data", "processed")
+
+# Vérifier et créer le répertoire de destination s'il n'existe pas.
+if not os.path.exists(processed_folder_path):
+    os.makedirs(processed_folder_path)
+
 # 7.1. Sauvegarder les données de validations traitées dans un nouveau csv.
 
 processed_validations_filepath = os.path.join(
