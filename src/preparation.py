@@ -158,7 +158,7 @@ stations_df[["latitude", "longitude"]] = (
 stations_df["id_ref_zdc"] = stations_df["id_ref_zdc"].astype(str)
 
 # Remplacer dans "termetro": "METRO 14" par 1 (erreur car valeur doit être 1 ou 0 uniquement).
-stations_df.loc[stations_df["termetro"] == "METRO 14", "termetro"] = 1
+stations_df.loc[stations_df["termetro"] == "METRO 14", "termetro"] = "1"
 
 # Modifier termetro de object à int64.
 stations_df["termetro"] = stations_df["termetro"].astype(int)
@@ -203,6 +203,23 @@ stations_df.loc[
     "id_ref_zdc",
 ] = "73615"
 
+# Bercy (71607) : 2 lignes de même nom -> fusion en une seule station.
+m = stations_df["id_ref_zdc"] == "71607"
+metro = m & (stations_df["mode"] == "METRO")
+stations_df.loc[metro, "res_com"] = "METRO 6 / METRO 14 / TRAIN R / TER"
+stations_df.loc[metro, "mode"] = "METRO / TRAIN"
+stations_df.loc[metro, "train"] = 1
+stations_df = stations_df[~(m & (stations_df["mode"] == "TRAIN"))]
+
+# Pont de Rungis (69677) : 2 lignes de même nom -> fusion en une seule station.
+m = stations_df["id_ref_zdc"] == "69677"
+rer = m & (stations_df["mode"] == "RER")
+stations_df.loc[rer, "res_com"] = "RER C / METRO 14"
+stations_df.loc[rer, "mode"] = "RER / METRO"
+stations_df.loc[rer, "metro"] = 1
+stations_df.loc[rer, "termetro"] = 1
+stations_df = stations_df[~(m & (stations_df["mode"] == "METRO"))]
+
 # Suppression des doublons id_ref_zdc.
 
 stations_df = stations_df[
@@ -212,19 +229,7 @@ stations_df = stations_df[
     )
 ]
 stations_df = stations_df[
-    ~(
-        (stations_df["id_ref_zdc"] == "69677")
-        & (stations_df["nom_zdc"] == "Pont de Rungis Aéroport d'Orly")
-    )
-]
-stations_df = stations_df[
     ~((stations_df["id_ref_zdc"] == "71229") & (stations_df["nom_zdc"] == "La Muette"))
-]
-stations_df = stations_df[
-    ~(
-        (stations_df["id_ref_zdc"] == "71607")
-        & (stations_df["nom_zdc"] == "Gare de Bercy")
-    )
 ]
 stations_df = stations_df[
     ~(
