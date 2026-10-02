@@ -6,6 +6,7 @@ import os
 import glob
 import pandas as pd
 import geopandas as gpd
+import re
 
 
 # 1. DONNEES DE VALIDATION DE TITRES.
@@ -441,7 +442,6 @@ lignes = [
     "TRAIN V",
     "TRAM 1",
     "TRAM 2",
-    "TRAM 3",
     "TRAM 3a",
     "TRAM 3b",
     "TRAM 4",
@@ -464,9 +464,12 @@ lignes_df = pd.DataFrame(
     {
         "Ligne": lignes,
         "somme_nb_vald": [
-            validations_fusion_df[
-                validations_fusion_df["res_com"].str.contains(ligne, na=False)
-            ]["nb_vald"].sum()
+            validations_fusion_df.loc[
+                validations_fusion_df["res_com"].str.contains(
+                    rf"\b{re.escape(ligne)}\b", na=False, regex=True
+                ),
+                "nb_vald",
+            ].sum()
             for ligne in lignes
         ],
     }
