@@ -149,7 +149,7 @@ st.write("##### 2.3. Carte des Stations.")
 
 degrade_couleur = ["#4EA8DE", "#0077B6", "#03045E"]
 
-fig = px.scatter_mapbox(
+fig = px.scatter_map(
     df[["nom_zdc", "nb_vald", "latitude", "longitude"]]
     .groupby(["nom_zdc", "latitude", "longitude"])["nb_vald"]
     .sum()
@@ -160,12 +160,13 @@ fig = px.scatter_mapbox(
     size="nb_vald",
     color="nb_vald",
     color_continuous_scale=degrade_couleur,
-    mapbox_style="carto-positron",
-    width=1300,
+    map_style="carto-positron",
+    zoom=9,
+    center={"lat": 48.8566, "lon": 2.3522},
     height=600,
 )
 
-fig
+st.plotly_chart(fig, use_container_width=True)
 
 
 # Validations par catégorie de titre.
